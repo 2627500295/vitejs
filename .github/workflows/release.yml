@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+# concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: ⬇️ Checkout Repo
+        uses: actions/checkout@v3
+        # with:
+        #   fetch-depth: 0
+
+      # https://github.com/actions/setup-node
+      - id: setup-node
+        name: ⚙ Setup the latest LTS version of Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/hydrogen
+          # registry-url: "https://registry.npmjs.org"
+          # scope: '@minicdn'
+          # cache: 'pnpm'
+
+      # https://github.com/pnpm/action-setup
+      - id: pnpm-install
+        name: 📦 Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+          run_install: false
+
+      # - id: get-pnpm-cache-dir
+      #   name: 🎈 Get pnpm store directory
+      #   run: |
+      #     echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      # - id: pnpm-cache
+      #   name: 🔆 Cache pnpm modules
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ steps.get-pnpm-cache-dir.outputs.pnpm_cache_dir }}
+      #     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: 🧩 Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: 🏗️ Build
+        run: pnpm --filter @minicdn/vitejs-plugins-interpolate-html build
+
+      # https://github.com/changesets/action
+      - id: changesets
+        name: 📤 Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+          publish: 'pnpm run changeset publish'
+          version: 'pnpm run changeset version'
