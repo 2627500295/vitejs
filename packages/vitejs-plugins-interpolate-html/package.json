@@ -1,0 +1,39 @@
+{
+  "name": "@minicdn/vitejs-plugins-interpolate-html",
+  "version": "1.0.0",
+  "author": "microld",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://github.com/vitejs/vite/tree/main/packages/plugin-vue#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitejs/vite.git",
+    "directory": "packages/plugin-vue"
+  },
+  "bugs": {
+    "url": "https://github.com/vitejs/vite/issues"
+  },
+  "scripts": {
+    "dev": "rimraf dist && run-p dev-types dev-watch",
+    "dev-types": "tsc -p . -w --incremental --emitDeclarationOnly",
+    "dev-watch": "esbuild src/index.ts --watch --bundle --platform=node --target=node12 --external:@vue/compiler-sfc --external:vue/compiler-sfc --external:vite --outfile=dist/index.js",
+    "build": "rimraf dist && run-s build-bundle build-types",
+    "build-bundle": "esbuild src/index.ts --bundle --platform=node --target=node12 --external:@vue/compiler-sfc --external:vue/compiler-sfc --external:vite --outfile=dist/index.js & npm run patch-dist",
+    "patch-dist": "ts-node ../../scripts/patchEsbuildDist.ts dist/index.js interpolate",
+    "build-types": "tsc -p . --emitDeclarationOnly --outDir temp && api-extractor run && rimraf temp",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "vite": "^2.5.10"
+  },
+  "devDependencies": {
+    "vite": "^2.5.10"
+  },
+  "license": "MIT"
+}
