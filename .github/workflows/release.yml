@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js Latest LTS Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/hydrogen
+          registry-url: "https://registry.npmjs.org"
+          scope: '@minicdn'
+
+      - name: Install Changesets
+        run: |
+          npm install --no-package-lock --no-save @changesets/cli
+
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+          
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          publish: pnpm dlx changeset publish
